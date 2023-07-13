@@ -21,6 +21,7 @@ on:
       - "utils/**"
   workflow_dispatch:
 
+
 jobs:
   check_code_quality:
     runs-on: ubuntu-latest
