@@ -1265,3 +1265,24 @@ class ModelWithHeadsAdaptersMixin(ModelAdaptersMixin):
             return super().get_adapter(name)
         else:
             return self.base_model.get_adapter(name)
+
+
+class StandaloneForwardMixin(ABC):
+    """Mixin for transformer model components adding support for standalone forward calls."""
+
+    def __init__(self, config, *args, **kwargs):
+        super().__init__(config, *args, **kwargs)
+        self.base_model.shared_parameters = nn.ModuleDict()
+
+    def forward_context(self, context: ForwardContext, *args, **kwargs):
+        """
+        This method is called by the ``ForwardContext`` at the beginning of the forward pass.
+        NOTE: This does not yet support actions that require a reference to the main model as
+        there is no reference to the transformer model containing the components.
+        """
+
+        # Adapter gating and attention outputs
+        context.output_adapter_gating_scores = kwargs.get("output_adapter_gating_scores", False)
+        context.output_adapter_fusion_attentions = kwargs.get("output_adapter_fusion_attentions", False)
+        context.adapter_gating_scores = defaultdict(dict)
+        context.adapter_fusion_attentions = defaultdict(dict)

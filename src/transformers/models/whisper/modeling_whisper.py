@@ -33,7 +33,7 @@ from ...adapters.mixins.whisper import (
     WhisperModelAdaptersMixin,
     WhisperModelWithHeadsAdaptersMixin,
 )
-from ...adapters.model_mixin import InvertibleAdaptersMixin
+from ...adapters.model_mixin import InvertibleAdaptersMixin, StandaloneForwardMixin
 from ...adapters.prefix_tuning import PrefixTuningShim
 from ...modeling_outputs import (
     BaseModelOutput,
@@ -616,7 +616,7 @@ WHISPER_INPUTS_DOCSTRING = r"""
 """
 
 
-class WhisperEncoder(InvertibleAdaptersMixin, WhisperPreTrainedModel):
+class WhisperEncoder(InvertibleAdaptersMixin, StandaloneForwardMixin, WhisperPreTrainedModel):
     """
     Transformer encoder consisting of *config.encoder_layers* self attention layers. Each layer is a
     [`WhisperEncoderLayer`].
@@ -656,6 +656,7 @@ class WhisperEncoder(InvertibleAdaptersMixin, WhisperPreTrainedModel):
             param.requires_grad = False
         self._requires_grad = False
 
+    @ForwardContext.wrap
     def forward(
         self,
         input_features,
@@ -764,7 +765,7 @@ class WhisperEncoder(InvertibleAdaptersMixin, WhisperPreTrainedModel):
         )
 
 
-class WhisperDecoder(WhisperPreTrainedModel):
+class WhisperDecoder(StandaloneForwardMixin, WhisperPreTrainedModel):
     """
     Transformer decoder consisting of *config.decoder_layers* layers. Each layer is a [`WhisperDecoderLayer`]
 
@@ -818,6 +819,7 @@ class WhisperDecoder(WhisperPreTrainedModel):
 
         return combined_attention_mask
 
+    @ForwardContext.wrap
     def forward(
         self,
         input_ids=None,

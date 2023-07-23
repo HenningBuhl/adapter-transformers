@@ -33,7 +33,7 @@ from ...adapters.mixins.bart import (
     BartModelAdaptersMixin,
     BartModelWithHeadsAdaptersMixin,
 )
-from ...adapters.model_mixin import InvertibleAdaptersMixin
+from ...adapters.model_mixin import InvertibleAdaptersMixin, StandaloneForwardMixin
 from ...adapters.prefix_tuning import PrefixTuningShim
 from ...modeling_outputs import (
     BaseModelOutput,
@@ -716,7 +716,7 @@ MBART_INPUTS_DOCSTRING = r"""
 """
 
 
-class MBartEncoder(InvertibleAdaptersMixin, MBartPreTrainedModel):
+class MBartEncoder(InvertibleAdaptersMixin, StandaloneForwardMixin, MBartPreTrainedModel):
     """
     Transformer encoder consisting of *config.encoder_layers* self attention layers. Each layer is a
     [`MBartEncoderLayer`].
@@ -760,6 +760,7 @@ class MBartEncoder(InvertibleAdaptersMixin, MBartPreTrainedModel):
         if self.supports_gradient_checkpointing and getattr(self.config, "gradient_checkpointing", False):
             self.gradient_checkpointing_enable()
 
+    @ForwardContext.wrap
     def forward(
         self,
         input_ids: torch.LongTensor = None,
@@ -898,7 +899,7 @@ class MBartEncoder(InvertibleAdaptersMixin, MBartPreTrainedModel):
         )
 
 
-class MBartDecoder(MBartPreTrainedModel):
+class MBartDecoder(StandaloneForwardMixin, MBartPreTrainedModel):
     """
     Transformer decoder consisting of *config.decoder_layers* layers. Each layer is a [`MBartDecoderLayer`]
 
@@ -959,6 +960,7 @@ class MBartDecoder(MBartPreTrainedModel):
 
         return combined_attention_mask
 
+    @ForwardContext.wrap
     def forward(
         self,
         input_ids: torch.LongTensor = None,
